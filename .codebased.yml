@@ -1,0 +1,37 @@
+api:
+  cors_origins:
+  - '*'
+  debug: false
+  enable_docs: true
+  host: 127.0.0.1
+  max_query_time: 30
+  port: 8000
+  reload: false
+database:
+  auto_backup: true
+  backup_retention_days: 7
+  batch_size: 1000
+  path: .codebased/data/graph.kuzu
+  query_timeout: 30
+log_level: INFO
+parsing:
+  exclude_patterns:
+  - __pycache__
+  - '*.pyc'
+  - .git
+  - node_modules
+  - .env
+  - venv
+  - env
+  file_extensions:
+  - .py
+  follow_symlinks: false
+  include_docstrings: true
+  max_file_size: 1048576
+project_root: .
+web:
+  default_layout: force
+  max_edges: 5000
+  max_nodes: 1000
+  static_path: .codebased/web
+  template_path: .codebased/web/templates

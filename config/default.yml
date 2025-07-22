@@ -1,0 +1,97 @@
+# Default CodeBased Configuration
+
+# Project root directory (relative to this config file)
+project_root: ".."
+
+# Logging level (DEBUG, INFO, WARNING, ERROR)
+log_level: "INFO"
+
+# Code parsing configuration
+parsing:
+  # File extensions to parse
+  file_extensions:
+    - ".py"
+    - ".js"
+    - ".ts"
+    - ".jsx"
+    - ".tsx"
+  
+  # Patterns to exclude during parsing
+  exclude_patterns:
+    - "__pycache__"
+    - "*.pyc"
+    - ".git"
+    - "node_modules"
+    - ".env"
+    - "venv"
+    - "env"
+    - "build"
+    - "dist"
+    - ".codebased"
+  
+  # Include docstrings in parsing
+  include_docstrings: true
+  
+  # Maximum file size to parse (bytes)
+  max_file_size: 1048576  # 1MB
+  
+  # Follow symbolic links
+  follow_symlinks: false
+
+# Database configuration
+database:
+  # Path to Kuzu database (relative to project root)
+  path: ".codebased/data/graph.kuzu"
+  
+  # Query timeout in seconds
+  query_timeout: 30
+  
+  # Batch size for bulk operations
+  batch_size: 1000
+  
+  # Enable automatic backups
+  auto_backup: true
+  
+  # Backup retention in days
+  backup_retention_days: 7
+
+# API server configuration
+api:
+  # Server host
+  host: "127.0.0.1"
+  
+  # Server port
+  port: 8000
+  
+  # Debug mode
+  debug: false
+  
+  # Auto-reload on code changes
+  reload: false
+  
+  # CORS origins
+  cors_origins:
+    - "*"
+  
+  # Maximum query execution time
+  max_query_time: 30
+  
+  # Enable API documentation
+  enable_docs: true
+
+# Web frontend configuration
+web:
+  # Static files path
+  static_path: ".codebased/web"
+  
+  # Template files path
+  template_path: ".codebased/web/templates"
+  
+  # Maximum nodes to display
+  max_nodes: 1000
+  
+  # Maximum edges to display
+  max_edges: 5000
+  
+  # Default graph layout
+  default_layout: "force"

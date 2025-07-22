@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeBased - Code Graph Visualization</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="d3.v7.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>CodeBased</h1>
+            <div class="header-controls">
+                <button id="update-btn" class="btn btn-primary">Update Graph</button>
+                <button id="freeze-btn" class="btn btn-secondary">Freeze Layout</button>
+                <button id="reset-btn" class="btn btn-secondary">Reset View</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Filters</h3>
+                    
+                    <div class="filter-group">
+                        <label>Node Types:</label>
+                        <div id="node-type-filters" class="checkbox-group">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="file-filter">File Filter:</label>
+                        <input type="text" id="file-filter" placeholder="Filter by file path...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="search-input">Search:</label>
+                        <input type="text" id="search-input" placeholder="Search nodes...">
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Quick Queries</h3>
+                    <div id="query-templates" class="template-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Statistics</h3>
+                    <div id="graph-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Nodes:</span>
+                            <span id="node-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Edges:</span>
+                            <span id="edge-count">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Selected Node</h3>
+                    <div id="node-details" class="node-details">
+                        <p>Click a node to see details</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Graph Visualization -->
+            <main class="graph-container">
+                <div id="graph-svg-container">
+                    <svg id="graph-svg"></svg>
+                    <!-- Legend -->
+                    <div id="graph-legend" class="graph-legend">
+                        <h4>Node Types</h4>
+                        <div id="legend-items" class="legend-items">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading overlay -->
+                <div id="loading" class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                    <p>Loading graph data...</p>
+                </div>
+
+                <!-- Error overlay -->
+                <div id="error" class="error-overlay" style="display: none;">
+                    <div class="error-content">
+                        <h3>Error</h3>
+                        <p id="error-message"></p>
+                        <button id="retry-btn" class="btn btn-primary">Retry</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div id="status-info">Ready</div>
+            <div class="status-controls">
+                <span id="zoom-level">100%</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Query Modal -->
+    <div id="query-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Execute Query</h3>
+                <span class="close" id="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="query-section">
+                    <label for="query-input">Cypher Query:</label>
+                    <textarea id="query-input" rows="8" placeholder="Enter your Cypher query..."></textarea>
+                </div>
+                <div class="query-section">
+                    <label for="query-params">Parameters (JSON):</label>
+                    <textarea id="query-params" rows="4" placeholder='{"param1": "value1"}'></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="execute-query-btn" class="btn btn-primary">Execute</button>
+                <button id="cancel-query-btn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="graph.js"></script>
+    <script src="performance.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

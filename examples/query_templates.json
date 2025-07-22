@@ -1,0 +1,242 @@
+{
+  "basic_queries": {
+    "all_files": {
+      "name": "List All Files",
+      "description": "Get an overview of all files in the codebase, sorted by size",
+      "query": "MATCH (f:File) RETURN f.name, f.path, f.lines_of_code ORDER BY f.lines_of_code DESC",
+      "parameters": [],
+      "category": "basic"
+    },
+    "entity_counts": {
+      "name": "Count Entities by Type",
+      "description": "Understand the composition of your codebase",
+      "query": "MATCH (n) RETURN labels(n)[0] AS entity_type, COUNT(n) AS count ORDER BY count DESC",
+      "parameters": [],
+      "category": "basic"
+    },
+    "complex_files": {
+      "name": "Files with Most Entities",
+      "description": "Find the most complex files that might need refactoring",
+      "query": "MATCH (f:File)-[:CONTAINS]->(entity) RETURN f.name, f.path, COUNT(entity) AS entity_count ORDER BY entity_count DESC LIMIT 10",
+      "parameters": [],
+      "category": "basic"
+    }
+  },
+  "function_analysis": {
+    "find_callers": {
+      "name": "Find Function Callers",
+      "description": "Find all places where a specific function is called",
+      "query": "MATCH (caller:Function)-[:CALLS]->(target:Function {name: $function_name}) RETURN DISTINCT caller.name AS caller_name, caller.file_path AS caller_file, caller.line_start AS caller_line ORDER BY caller_file, caller_line",
+      "parameters": ["function_name"],
+      "example_params": {"function_name": "process_data"},
+      "category": "functions"
+    },
+    "unused_functions": {
+      "name": "Find Unused Functions",
+      "description": "Identify potentially unused functions (dead code)",
+      "query": "MATCH (f:Function) WHERE NOT ()-[:CALLS]->(f) AND f.name <> '__init__' AND f.name <> '__main__' AND NOT f.name STARTS WITH 'test_' RETURN f.name, f.file_path, f.line_start ORDER BY f.file_path, f.line_start",
+      "parameters": [],
+      "category": "functions"
+    },
+    "most_called": {
+      "name": "Most Called Functions",
+      "description": "Identify the most critical functions in your codebase",
+      "query": "MATCH (caller:Function)-[:CALLS]->(target:Function) RETURN target.name AS function_name, target.file_path AS file_path, COUNT(caller) AS call_count ORDER BY call_count DESC LIMIT 20",
+      "parameters": [],
+      "category": "functions"
+    },
+    "high_complexity": {
+      "name": "High Complexity Functions",
+      "description": "Find functions that might need refactoring due to high complexity",
+      "query": "MATCH (f:Function) WHERE f.complexity > $min_complexity RETURN f.name, f.file_path, f.complexity, f.line_start ORDER BY f.complexity DESC",
+      "parameters": ["min_complexity"],
+      "example_params": {"min_complexity": 10},
+      "category": "functions"
+    },
+    "recursive_functions": {
+      "name": "Recursive Functions",
+      "description": "Identify recursive function calls",
+      "query": "MATCH (f:Function)-[:CALLS]->(f) RETURN f.name, f.file_path, f.line_start",
+      "parameters": [],
+      "category": "functions"
+    },
+    "long_functions": {
+      "name": "Long Functions",
+      "description": "Find functions that might be too long and need breaking down",
+      "query": "MATCH (f:Function) WHERE (f.line_end - f.line_start) > $min_lines RETURN f.name, f.file_path, (f.line_end - f.line_start + 1) AS line_count ORDER BY line_count DESC",
+      "parameters": ["min_lines"],
+      "example_params": {"min_lines": 50},
+      "category": "functions"
+    }
+  },
+  "class_analysis": {
+    "inheritance_hierarchy": {
+      "name": "Class Inheritance Hierarchy",
+      "description": "Understand inheritance relationships for a specific class",
+      "query": "MATCH path = (child:Class)-[:INHERITS*]->(parent:Class {name: $class_name}) RETURN path",
+      "parameters": ["class_name"],
+      "example_params": {"class_name": "BaseClass"},
+      "category": "classes"
+    },
+    "find_subclasses": {
+      "name": "Find All Subclasses",
+      "description": "Find all classes that inherit from a given class",
+      "query": "MATCH (parent:Class {name: $class_name})<-[:INHERITS*]-(child:Class) RETURN DISTINCT child.name AS subclass_name, child.file_path ORDER BY subclass_name",
+      "parameters": ["class_name"],
+      "example_params": {"class_name": "BaseClass"},
+      "category": "classes"
+    },
+    "leaf_classes": {
+      "name": "Leaf Classes",
+      "description": "Identify leaf classes in the inheritance hierarchy",
+      "query": "MATCH (c:Class) WHERE NOT (c)<-[:INHERITS]-() RETURN c.name, c.file_path ORDER BY c.name",
+      "parameters": [],
+      "category": "classes"
+    },
+    "classes_many_methods": {
+      "name": "Classes with Many Methods",
+      "description": "Find classes that might be doing too much (violating Single Responsibility Principle)",
+      "query": "MATCH (c:Class)-[:CONTAINS]->(m:Function) RETURN c.name AS class_name, c.file_path, COUNT(m) AS method_count ORDER BY method_count DESC LIMIT 10",
+      "parameters": [],
+      "category": "classes"
+    },
+    "abstract_classes": {
+      "name": "Abstract Classes",
+      "description": "Find all abstract classes and interfaces",
+      "query": "MATCH (c:Class) WHERE c.is_abstract = true RETURN c.name, c.file_path, c.docstring ORDER BY c.name",
+      "parameters": [],
+      "category": "classes"
+    }
+  },
+  "dependency_analysis": {
+    "file_dependencies": {
+      "name": "File Dependencies",
+      "description": "Find all files that a specific file depends on",
+      "query": "MATCH (source:File {name: $file_name})-[:CONTAINS]->(:Import)-[:IMPORTS]->(target:File) RETURN DISTINCT target.name AS dependency, target.path ORDER BY dependency",
+      "parameters": ["file_name"],
+      "example_params": {"file_name": "main.py"},
+      "category": "dependencies"
+    },
+    "dependent_files": {
+      "name": "Files That Depend On a File",
+      "description": "Find all files that depend on a specific file",
+      "query": "MATCH (dependent:File)-[:CONTAINS]->(:Import)-[:IMPORTS]->(target:File {name: $file_name}) RETURN DISTINCT dependent.name AS dependent_file, dependent.path ORDER BY dependent_file",
+      "parameters": ["file_name"],
+      "example_params": {"file_name": "utils.py"},
+      "category": "dependencies"
+    },
+    "circular_dependencies": {
+      "name": "Circular Dependencies",
+      "description": "Find circular import dependencies that could cause issues",
+      "query": "MATCH path = (f1:File)-[:IMPORTS*2..10]->(f1) WHERE length(path) > 2 RETURN path LIMIT 10",
+      "parameters": [],
+      "category": "dependencies"
+    },
+    "most_imported": {
+      "name": "Most Imported Modules",
+      "description": "Identify the most commonly used external libraries",
+      "query": "MATCH (file:File)-[:CONTAINS]->(import:Import)-[:IMPORTS]->(target) RETURN target.module_name AS module, COUNT(DISTINCT file) AS import_count ORDER BY import_count DESC LIMIT 20",
+      "parameters": [],
+      "category": "dependencies"
+    },
+    "external_dependencies": {
+      "name": "External Dependencies",
+      "description": "List all external dependencies and their usage frequency",
+      "query": "MATCH (import:Import) WHERE NOT EXISTS((import)-[:IMPORTS]->(:File)) RETURN DISTINCT import.module_name AS external_module, COUNT(*) AS usage_count ORDER BY usage_count DESC",
+      "parameters": [],
+      "category": "dependencies"
+    }
+  },
+  "impact_analysis": {
+    "function_impact": {
+      "name": "Function Change Impact",
+      "description": "Understand the impact of changing or removing a function",
+      "query": "MATCH path = (target:Function {name: $function_name})<-[:CALLS*1..3]-(affected) RETURN DISTINCT affected.name AS affected_entity, labels(affected)[0] AS entity_type, affected.file_path AS file_path, length(path) AS distance ORDER BY distance, file_path, affected_entity",
+      "parameters": ["function_name"],
+      "example_params": {"function_name": "critical_function"},
+      "category": "impact"
+    },
+    "class_usage": {
+      "name": "Class Usage Analysis",
+      "description": "Find all code that would be affected by changing a class",
+      "query": "MATCH (target:Class {name: $class_name})<-[:USES]-(user) RETURN DISTINCT user.name AS user_name, labels(user)[0] AS user_type, user.file_path AS file_path ORDER BY file_path, user_name",
+      "parameters": ["class_name"],
+      "example_params": {"class_name": "DatabaseConnection"},
+      "category": "impact"
+    },
+    "dependency_chain": {
+      "name": "Find Dependency Chain",
+      "description": "Find how two functions are connected through call chains",
+      "query": "MATCH path = (start:Function {name: $start_function})-[:CALLS*1..5]->(end:Function {name: $end_function}) RETURN path ORDER BY length(path) LIMIT 5",
+      "parameters": ["start_function", "end_function"],
+      "example_params": {"start_function": "main", "end_function": "save_data"},
+      "category": "impact"
+    },
+    "reachable_from_entry": {
+      "name": "Code Reachable from Entry Point",
+      "description": "Find all code reachable from a main entry point",
+      "query": "MATCH path = (entry:Function {name: $entry_point})-[:CALLS*]->(reachable:Function) RETURN DISTINCT reachable.name AS reachable_function, reachable.file_path AS file_path, MIN(length(path)) AS min_distance ORDER BY min_distance, file_path, reachable_function",
+      "parameters": ["entry_point"],
+      "example_params": {"entry_point": "main"},
+      "category": "impact"
+    }
+  },
+  "code_quality": {
+    "missing_docstrings": {
+      "name": "Functions Without Docstrings",
+      "description": "Identify functions that need documentation",
+      "query": "MATCH (f:Function) WHERE (f.docstring IS NULL OR f.docstring = '') AND NOT f.name STARTS WITH '_' RETURN f.name, f.file_path, f.line_start ORDER BY f.file_path, f.line_start",
+      "parameters": [],
+      "category": "quality"
+    },
+    "large_classes": {
+      "name": "Large Classes",
+      "description": "Find classes that might be too large and need refactoring",
+      "query": "MATCH (c:Class) WHERE (c.line_end - c.line_start) > $min_lines RETURN c.name, c.file_path, (c.line_end - c.line_start + 1) AS line_count ORDER BY line_count DESC",
+      "parameters": ["min_lines"],
+      "example_params": {"min_lines": 100},
+      "category": "quality"
+    },
+    "many_parameters": {
+      "name": "Functions with Many Parameters",
+      "description": "Find functions that might be hard to use due to many parameters",
+      "query": "MATCH (f:Function) WHERE f.signature CONTAINS ',' WITH f, size(split(f.signature, ',')) AS param_count WHERE param_count > $max_params RETURN f.name, f.file_path, f.signature, param_count ORDER BY param_count DESC",
+      "parameters": ["max_params"],
+      "example_params": {"max_params": 5},
+      "category": "quality"
+    },
+    "duplicate_names": {
+      "name": "Duplicate Function Names",
+      "description": "Find functions with the same name in different files (potential confusion)",
+      "query": "MATCH (f1:Function), (f2:Function) WHERE f1.name = f2.name AND f1.file_path <> f2.file_path RETURN f1.name AS function_name, COLLECT(DISTINCT f1.file_path) AS files ORDER BY function_name",
+      "parameters": [],
+      "category": "quality"
+    }
+  },
+  "ai_agent_templates": {
+    "analyze_function": {
+      "name": "Complete Function Analysis",
+      "description": "Get comprehensive information about a specific function",
+      "query": "MATCH (f:Function {name: $function_name}) OPTIONAL MATCH (f)<-[:CALLS]-(caller:Function) OPTIONAL MATCH (f)-[:CALLS]->(called:Function) OPTIONAL MATCH (f)<-[:CONTAINS]-(containing_class:Class) RETURN f AS function_details, COLLECT(DISTINCT caller.name) AS callers, COLLECT(DISTINCT called.name) AS calls, containing_class.name AS class_name",
+      "parameters": ["function_name"],
+      "example_params": {"function_name": "process_data"},
+      "category": "templates"
+    },
+    "analyze_class": {
+      "name": "Complete Class Analysis",
+      "description": "Get comprehensive information about a specific class",
+      "query": "MATCH (c:Class {name: $class_name}) OPTIONAL MATCH (c)-[:CONTAINS]->(method:Function) OPTIONAL MATCH (c)-[:INHERITS]->(parent:Class) OPTIONAL MATCH (child:Class)-[:INHERITS]->(c) RETURN c AS class_details, COLLECT(DISTINCT method.name) AS methods, parent.name AS parent_class, COLLECT(DISTINCT child.name) AS child_classes",
+      "parameters": ["class_name"],
+      "example_params": {"class_name": "DatabaseManager"},
+      "category": "templates"
+    },
+    "analyze_file": {
+      "name": "Complete File Analysis",
+      "description": "Get comprehensive information about a specific file",
+      "query": "MATCH (f:File {name: $file_name}) OPTIONAL MATCH (f)-[:CONTAINS]->(entity) OPTIONAL MATCH (f)-[:CONTAINS]->(:Import)-[:IMPORTS]->(dep:File) RETURN f AS file_details, COLLECT(DISTINCT labels(entity)[0]) AS entity_types, COLLECT(DISTINCT dep.name) AS dependencies",
+      "parameters": ["file_name"],
+      "example_params": {"file_name": "main.py"},
+      "category": "templates"
+    }
+  }
+}

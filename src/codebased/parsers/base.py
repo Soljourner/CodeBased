@@ -61,6 +61,11 @@ class BaseParser(ABC):
         """
         self.config = config or {}
         self.errors: List[str] = []
+
+    def can_parse(self, file_path: str) -> bool:
+        """Return True if this parser can handle ``file_path``."""
+        file_type = get_file_type(file_path)
+        return file_type in self.SUPPORTED_FILE_TYPES
     
     @abstractmethod
     def parse_file(self, file_path: str) -> ParseResult:

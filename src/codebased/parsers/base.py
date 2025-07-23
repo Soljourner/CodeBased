@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Generator, Tuple
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from .file_types import get_file_type
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,8 @@ class ParseResult:
 class BaseParser(ABC):
     """Abstract base class for code parsers."""
     
+    SUPPORTED_FILE_TYPES: Set[str] = set()
+
     def __init__(self, config: Dict[str, Any] = None):
         """
         Initialize parser with configuration.
@@ -58,19 +61,11 @@ class BaseParser(ABC):
         """
         self.config = config or {}
         self.errors: List[str] = []
-        
-    @abstractmethod
+
     def can_parse(self, file_path: str) -> bool:
-        """
-        Check if this parser can handle the given file.
-        
-        Args:
-            file_path: Path to the file
-            
-        Returns:
-            bool: True if parser can handle this file
-        """
-        pass
+        """Return True if this parser can handle ``file_path``."""
+        file_type = get_file_type(file_path)
+        return file_type in self.SUPPORTED_FILE_TYPES
     
     @abstractmethod
     def parse_file(self, file_path: str) -> ParseResult:
@@ -146,7 +141,8 @@ class BaseParser(ABC):
                     continue
                 
                 # Check if parser can handle this file
-                if self.can_parse(str(file_path)):
+                file_type = get_file_type(str(file_path))
+                if file_type and file_type in self.SUPPORTED_FILE_TYPES:
                     yield file_path
     
     def _should_exclude(self, path: str, exclude_patterns: List[str]) -> bool:

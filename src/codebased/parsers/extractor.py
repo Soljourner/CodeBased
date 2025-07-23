@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .base import ParseResult, ParsedEntity, ParsedRelationship
-from .python import PythonASTParser
+from .registry import PARSER_REGISTRY
 from ..database.service import DatabaseService
 from ..config import CodeBasedConfig
 
@@ -30,10 +30,14 @@ class EntityExtractor:
         self.config = config
         self.db_service = db_service
         
-        # Initialize parsers
-        self.parsers = {
-            'python': PythonASTParser(self._get_parser_config())
-        }
+        # Initialize parsers dynamically from registry
+        self.parsers = {}
+        parser_config = self._get_parser_config()
+        for name, parser_cls in PARSER_REGISTRY.items():
+            try:
+                self.parsers[name] = parser_cls(parser_config)
+            except Exception as e:  # pragma: no cover - initialization failure
+                logger.error(f"Failed to initialize parser '{name}': {e}")
         
         # Symbol registry for cross-file resolution
         self.symbol_registry: Dict[str, ParsedEntity] = {}

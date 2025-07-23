@@ -11,6 +11,7 @@ CodeBased is a lightweight, self-contained code graph generator and visualizatio
 - **Multi-Format Export**: JSON, CSV, and visual exports
 - **Command Line Interface**: Simple CLI for automation and scripting
 - **Performance Optimized**: Handles large codebases with WebGL rendering
+- **Dynamic Parsers**: Automatically loads available language parsers
 
 ## Quick Start
 
@@ -33,6 +34,8 @@ CodeBased is a lightweight, self-contained code graph generator and visualizatio
    source venv/bin/activate  # or venv\Scripts\activate on Windows
    pip install -r requirements.txt
    pip install -e .
+   # optional: install tree-sitter grammars for JS/TS/HTML/CSS
+   pip install tree_sitter tree_sitter_languages
    ```
 
 ### Basic Usage

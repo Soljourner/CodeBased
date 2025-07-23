@@ -5,10 +5,22 @@ Parser registry for CodeBased.
 from typing import Dict, Type
 from .base import BaseParser
 from .python import PythonASTParser
+from .javascript import JavaScriptParser
+from .html import HTMLParser
+from .css import CSSParser
+from .typescript import TypeScriptParser
+from .angular import AngularParser
+from .nodejs import NodeJSParser
 
 # Parser registry mapping file types to parser classes
 PARSER_REGISTRY: Dict[str, Type[BaseParser]] = {
     "python": PythonASTParser,
+    "javascript": JavaScriptParser,
+    "html": HTMLParser,
+    "css": CSSParser,
+    "typescript": TypeScriptParser,
+    "angular": AngularParser,
+    "nodejs": NodeJSParser,
 }
 
 

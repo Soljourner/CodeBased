@@ -24,8 +24,13 @@ FILE_TYPE_MAPPINGS: Dict[str, str] = {
     ".htm": "html",
     # CSS
     ".css": "css",
-    ".scss": "scss",
-    ".sass": "sass",
+    ".scss": "css",
+    ".sass": "css",
+    # Angular
+    ".ts": "angular",
+    ".html": "angular",
+    # Node.js
+    ".js": "nodejs",
     # JSON
     ".json": "json",
     # YAML

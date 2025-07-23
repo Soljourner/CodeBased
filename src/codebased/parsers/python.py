@@ -16,11 +16,7 @@ logger = logging.getLogger(__name__)
 class PythonASTParser(BaseParser):
     """Python AST parser implementation."""
     
-    SUPPORTED_EXTENSIONS = {'.py'}
-    
-    def can_parse(self, file_path: str) -> bool:
-        """Check if file is a Python file."""
-        return Path(file_path).suffix in self.SUPPORTED_EXTENSIONS
+    SUPPORTED_FILE_TYPES = {"python"}
     
     def parse_file(self, file_path: str) -> ParseResult:
         """

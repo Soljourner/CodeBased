@@ -30,12 +30,9 @@ class TestPythonASTParser(unittest.TestCase):
         """Clean up test environment."""
         pass
         
-    def test_can_parse_python_files(self):
-        """Test that parser can identify Python files."""
-        self.assertTrue(self.parser.can_parse('test.py'))
-        self.assertTrue(self.parser.can_parse('/path/to/script.py'))
-        self.assertFalse(self.parser.can_parse('test.js'))
-        self.assertFalse(self.parser.can_parse('README.md'))
+    def test_supported_file_types(self):
+        """Test that the parser supports the correct file types."""
+        self.assertEqual(self.parser.SUPPORTED_FILE_TYPES, {"python"})
         
     def test_parse_simple_function(self):
         """Test parsing a simple function."""

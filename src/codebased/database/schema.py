@@ -279,19 +279,23 @@ class GraphSchema:
         }
         
         try:
-            # Try to query each expected table to check if it exists
+            # Get all tables from the database
+            tables_result = self.db_service.execute_query("CALL show_tables() RETURN *")
+            if tables_result is None:
+                validation['valid'] = False
+                validation['errors'].append("Could not retrieve tables from database.")
+                return validation
+
+            existing_tables = {table['name'] for table in tables_result}
             expected_tables = set(self.NODE_TABLES.keys()) | set(self.RELATIONSHIP_TABLES.keys())
-            
-            for table_name in expected_tables:
-                try:
-                    # Try a simple query to check if table exists
-                    test_query = f"MATCH (n:{table_name}) RETURN count(n) LIMIT 1" if table_name in self.NODE_TABLES else f"MATCH ()-[r:{table_name}]->() RETURN count(r) LIMIT 1"
-                    result = self.db_service.execute_query(test_query)
-                    validation['tables'][table_name] = {'exists': True}
-                except Exception:
-                    validation['missing_tables'].append(table_name)
-                    validation['valid'] = False
-            
+
+            # Find missing and unexpected tables
+            validation['missing_tables'] = list(expected_tables - existing_tables)
+            validation['unexpected_tables'] = list(existing_tables - expected_tables)
+
+            if validation['missing_tables'] or validation['unexpected_tables']:
+                validation['valid'] = False
+
             logger.info(f"Schema validation: {'valid' if validation['valid'] else 'invalid'}")
             
         except Exception as e:

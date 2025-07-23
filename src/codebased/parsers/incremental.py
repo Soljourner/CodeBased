@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional, Set, Tuple
 
 from .extractor import EntityExtractor
 from .base import ParseResult
+from .registry import get_parser
 from ..database.service import DatabaseService
 from ..config import CodeBasedConfig
 

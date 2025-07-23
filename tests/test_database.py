@@ -112,18 +112,18 @@ class TestGraphSchema(unittest.TestCase):
         self.temp_dir = Path(tempfile.mkdtemp())
         self.db_path = self.temp_dir / "test_schema.kuzu"
         self.db_service = DatabaseService(str(self.db_path))
-        self.db_service.initialize()
         self.schema = GraphSchema(self.db_service)
         
     def tearDown(self):
         """Clean up test environment."""
-        if hasattr(self, 'db_service'):
+        if hasattr(self, 'db_service') and self.db_service.conn:
             self.db_service.disconnect()
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
             
     def test_create_schema(self):
         """Test schema creation."""
+        self.db_service.initialize()
         result = self.schema.create_schema()
         self.assertTrue(result)
         
@@ -140,7 +140,10 @@ class TestGraphSchema(unittest.TestCase):
     def test_validate_schema(self):
         """Test schema validation."""
         # Before creating schema
+        self.db_service.initialize()
+        print("Before validation")
         validation = self.schema.validate_schema()
+        print(f"Validation result: {validation}")
         self.assertFalse(validation['valid'])
         
         # After creating schema
@@ -151,6 +154,8 @@ class TestGraphSchema(unittest.TestCase):
         
     def test_schema_info(self):
         """Test getting schema information."""
+        self.db_service.initialize()
+        self.schema.create_schema()
         info = self.schema.get_schema_info()
         
         self.assertIn('node_tables', info)
@@ -165,6 +170,7 @@ class TestGraphSchema(unittest.TestCase):
     def test_reset_schema(self):
         """Test schema reset."""
         # Create schema first
+        self.db_service.initialize()
         self.schema.create_schema()
         
         # Verify it exists

@@ -7,38 +7,37 @@ from typing import Dict, Optional
 
 # Mapping of file extensions to file types
 # This can be extended to support more languages
+# Patterns for more specific detection (checked before extension mapping)
+FILE_TYPE_PATTERNS: Dict[str, str] = {
+    # Angular component / module / service files
+    ".component.ts": "angular",
+    ".module.ts": "angular",
+    ".service.ts": "angular",
+    ".guard.ts": "angular",
+    ".pipe.ts": "angular",
+    ".component.html": "angular",
+    ".component.css": "angular",
+}
+
+# Basic extension mapping
 FILE_TYPE_MAPPINGS: Dict[str, str] = {
-    # Python
     ".py": "python",
     ".pyw": "python",
     ".pyi": "python",
-    # JavaScript
     ".js": "javascript",
     ".jsx": "javascript",
     ".mjs": "javascript",
-    # TypeScript
     ".ts": "typescript",
     ".tsx": "typescript",
-    # HTML
     ".html": "html",
     ".htm": "html",
-    # CSS
     ".css": "css",
     ".scss": "css",
     ".sass": "css",
-    # Angular
-    ".ts": "angular",
-    ".html": "angular",
-    # Node.js
-    ".js": "nodejs",
-    # JSON
     ".json": "json",
-    # YAML
     ".yml": "yaml",
     ".yaml": "yaml",
-    # Markdown
     ".md": "markdown",
-    # Docker
     "Dockerfile": "dockerfile",
 }
 
@@ -54,7 +53,14 @@ def get_file_type(file_path: str) -> Optional[str]:
         The file type as a string, or None if the file type is not supported.
     """
     path = Path(file_path)
-    extension = path.suffix
+    name_lower = path.name.lower()
+
+    # Check specific patterns first
+    for pattern, ftype in FILE_TYPE_PATTERNS.items():
+        if name_lower.endswith(pattern):
+            return ftype
+
+    extension = path.suffix.lower()
 
     # Handle files with no extension like 'Dockerfile'
     if not extension and path.name in FILE_TYPE_MAPPINGS:

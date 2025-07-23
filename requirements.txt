@@ -7,6 +7,8 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 pyyaml==6.0.1
 aiofiles==23.2.1
+tree_sitter==0.25.0
+tree_sitter_languages==1.10.2
 
 # Security
 python-multipart==0.0.6

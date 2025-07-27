@@ -28,7 +28,7 @@ def ensure_language(lang: str) -> Language:
     so_path = __name__.replace(".", "/")
     so_path = f"{__file__[:-3]}_{lang}.so"
     try:
-        return Language(so_path, lang)
+        return Language(so_path)
     except Exception as e:
         logger.error("Tree-sitter language '%s' not installed: %s", lang, e)
         raise

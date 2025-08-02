@@ -101,6 +101,290 @@ class GraphSchema:
                 is_from_import BOOLEAN,
                 PRIMARY KEY (id)
             )
+        """,
+        
+        # TypeScript/JavaScript specific entity types
+        'Method': """
+            CREATE NODE TABLE IF NOT EXISTS Method(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                class_id STRING,
+                docstring STRING,
+                line_start INT64,
+                line_end INT64,
+                signature STRING,
+                return_type STRING,
+                is_async BOOLEAN,
+                is_static BOOLEAN,
+                accessibility STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Interface': """
+            CREATE NODE TABLE IF NOT EXISTS Interface(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                docstring STRING,
+                line_start INT64,
+                line_end INT64,
+                property_count INT64,
+                method_count INT64,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Type': """
+            CREATE NODE TABLE IF NOT EXISTS Type(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                type_definition STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Enum': """
+            CREATE NODE TABLE IF NOT EXISTS Enum(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                values STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Export': """
+            CREATE NODE TABLE IF NOT EXISTS Export(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_number INT64,
+                export_type STRING,
+                is_default BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'ArrayPattern': """
+            CREATE NODE TABLE IF NOT EXISTS ArrayPattern(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                pattern_type STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Constructor': """
+            CREATE NODE TABLE IF NOT EXISTS Constructor(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                class_id STRING,
+                line_start INT64,
+                line_end INT64,
+                signature STRING,
+                accessibility STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Getter': """
+            CREATE NODE TABLE IF NOT EXISTS Getter(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                class_id STRING,
+                line_start INT64,
+                line_end INT64,
+                return_type STRING,
+                accessibility STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Setter': """
+            CREATE NODE TABLE IF NOT EXISTS Setter(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                class_id STRING,
+                line_start INT64,
+                line_end INT64,
+                parameter_type STRING,
+                accessibility STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'Decorator': """
+            CREATE NODE TABLE IF NOT EXISTS Decorator(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                decorator_name STRING,
+                arguments STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        # Angular-specific entity types
+        'AngularComponent': """
+            CREATE NODE TABLE IF NOT EXISTS AngularComponent(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                selector STRING,
+                template_url STRING,
+                style_url STRING,
+                standalone BOOLEAN,
+                imports STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularService': """
+            CREATE NODE TABLE IF NOT EXISTS AngularService(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                provided_in STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularDirective': """
+            CREATE NODE TABLE IF NOT EXISTS AngularDirective(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                selector STRING,
+                standalone BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularPipe': """
+            CREATE NODE TABLE IF NOT EXISTS AngularPipe(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                pipe_name STRING,
+                standalone BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularModule': """
+            CREATE NODE TABLE IF NOT EXISTS AngularModule(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                declarations STRING,
+                imports STRING,
+                exports STRING,
+                providers STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularInput': """
+            CREATE NODE TABLE IF NOT EXISTS AngularInput(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                input_name STRING,
+                required BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'AngularOutput': """
+            CREATE NODE TABLE IF NOT EXISTS AngularOutput(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                output_name STRING,
+                event_type STRING,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        # JavaScript-specific entity types for external references
+        'ArrowFunction': """
+            CREATE NODE TABLE IF NOT EXISTS ArrowFunction(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                signature STRING,
+                return_type STRING,
+                is_async BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'GeneratorFunction': """
+            CREATE NODE TABLE IF NOT EXISTS GeneratorFunction(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                line_start INT64,
+                line_end INT64,
+                signature STRING,
+                return_type STRING,
+                is_async BOOLEAN,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'ExternalProperty': """
+            CREATE NODE TABLE IF NOT EXISTS ExternalProperty(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                object_name STRING,
+                property_path STRING,
+                line_number INT64,
+                PRIMARY KEY (id)
+            )
+        """,
+        
+        'ExternalFunction': """
+            CREATE NODE TABLE IF NOT EXISTS ExternalFunction(
+                id STRING,
+                name STRING,
+                file_id STRING,
+                object_name STRING,
+                line_number INT64,
+                PRIMARY KEY (id)
+            )
         """
     }
     
@@ -177,6 +461,133 @@ class GraphSchema:
         
         'DECORATES': """
             CREATE REL TABLE IF NOT EXISTS DECORATES(FROM Function TO Function, decorator_name STRING)
+        """,
+        
+        # TypeScript/JavaScript specific relationships
+        'EXPORTS': """
+            CREATE REL TABLE IF NOT EXISTS EXPORTS(FROM File TO Export, export_type STRING, symbol STRING)
+        """,
+        
+        'ACCESSES': """
+            CREATE REL TABLE IF NOT EXISTS ACCESSES(FROM Function TO Variable, property_path STRING, access_location INT64)
+        """,
+        
+        'IMPLEMENTS': """
+            CREATE REL TABLE IF NOT EXISTS IMPLEMENTS(FROM Class TO Interface)
+        """,
+        
+        'EXTENDS': """
+            CREATE REL TABLE IF NOT EXISTS EXTENDS(FROM Class TO Class)
+        """,
+        
+        # Angular-specific relationships
+        'USES_TEMPLATE': """
+            CREATE REL TABLE IF NOT EXISTS USES_TEMPLATE(FROM AngularComponent TO File, template_path STRING, resolved_path STRING, component_selector STRING)
+        """,
+        
+        'USES_STYLES': """
+            CREATE REL TABLE IF NOT EXISTS USES_STYLES(FROM AngularComponent TO File, style_path STRING, resolved_path STRING, component_selector STRING)
+        """,
+        
+        # Additional containment relationships for new entity types
+        'FILE_CONTAINS_METHOD': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_METHOD(FROM File TO Method)
+        """,
+        
+        'FILE_CONTAINS_INTERFACE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_INTERFACE(FROM File TO Interface)
+        """,
+        
+        'FILE_CONTAINS_TYPE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_TYPE(FROM File TO Type)
+        """,
+        
+        'FILE_CONTAINS_ENUM': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ENUM(FROM File TO Enum)
+        """,
+        
+        'FILE_CONTAINS_EXPORT': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_EXPORT(FROM File TO Export)
+        """,
+        
+        'FILE_CONTAINS_ARRAYPATTERN': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ARRAYPATTERN(FROM File TO ArrayPattern)
+        """,
+        
+        'FILE_CONTAINS_CONSTRUCTOR': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_CONSTRUCTOR(FROM File TO Constructor)
+        """,
+        
+        'FILE_CONTAINS_GETTER': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_GETTER(FROM File TO Getter)
+        """,
+        
+        'FILE_CONTAINS_SETTER': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_SETTER(FROM File TO Setter)
+        """,
+        
+        'FILE_CONTAINS_DECORATOR': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_DECORATOR(FROM File TO Decorator)
+        """,
+        
+        'FILE_CONTAINS_ANGULARCOMPONENT': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARCOMPONENT(FROM File TO AngularComponent)
+        """,
+        
+        'FILE_CONTAINS_ANGULARSERVICE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARSERVICE(FROM File TO AngularService)
+        """,
+        
+        'FILE_CONTAINS_ANGULARDIRECTIVE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARDIRECTIVE(FROM File TO AngularDirective)
+        """,
+        
+        'FILE_CONTAINS_ANGULARPIPE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARPIPE(FROM File TO AngularPipe)
+        """,
+        
+        'FILE_CONTAINS_ANGULARMODULE': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARMODULE(FROM File TO AngularModule)
+        """,
+        
+        'FILE_CONTAINS_ANGULARINPUT': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULARINPUT(FROM File TO AngularInput)
+        """,
+        
+        'FILE_CONTAINS_ANGULAROUTPUT': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ANGULAROUTPUT(FROM File TO AngularOutput)
+        """,
+        
+        'FILE_CONTAINS_ARROWFUNCTION': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_ARROWFUNCTION(FROM File TO ArrowFunction)
+        """,
+        
+        'FILE_CONTAINS_GENERATORFUNCTION': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_GENERATORFUNCTION(FROM File TO GeneratorFunction)
+        """,
+        
+        'FILE_CONTAINS_EXTERNALPROPERTY': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_EXTERNALPROPERTY(FROM File TO ExternalProperty)
+        """,
+        
+        'FILE_CONTAINS_EXTERNALFUNCTION': """
+            CREATE REL TABLE IF NOT EXISTS FILE_CONTAINS_EXTERNALFUNCTION(FROM File TO ExternalFunction)
+        """,
+        
+        'CLASS_CONTAINS_METHOD': """
+            CREATE REL TABLE IF NOT EXISTS CLASS_CONTAINS_METHOD(FROM Class TO Method)
+        """,
+        
+        'CLASS_CONTAINS_CONSTRUCTOR': """
+            CREATE REL TABLE IF NOT EXISTS CLASS_CONTAINS_CONSTRUCTOR(FROM Class TO Constructor)
+        """,
+        
+        'CLASS_CONTAINS_GETTER': """
+            CREATE REL TABLE IF NOT EXISTS CLASS_CONTAINS_GETTER(FROM Class TO Getter)
+        """,
+        
+        'CLASS_CONTAINS_SETTER': """
+            CREATE REL TABLE IF NOT EXISTS CLASS_CONTAINS_SETTER(FROM Class TO Setter)
         """
     }
     

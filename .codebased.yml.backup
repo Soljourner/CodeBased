@@ -1,6 +1,6 @@
 api:
   cors_origins:
-    - "*"
+  - '*'
   debug: false
   enable_docs: true
   host: 127.0.0.1
@@ -16,22 +16,15 @@ database:
 log_level: INFO
 parsing:
   exclude_patterns:
-    - __pycache__
-    - "*.pyc"
-    - .git
-    - node_modules
-    - .env
-    - venv
-    - env
-    - build
-    - dist
-    - .codebased
+  - __pycache__
+  - '*.pyc'
+  - .git
+  - node_modules
+  - .env
+  - venv
+  - env
   file_extensions:
-    - .py
-    - .js
-    - .ts
-    - .jsx
-    - .tsx
+  - .py
   follow_symlinks: false
   include_docstrings: true
   max_file_size: 1048576

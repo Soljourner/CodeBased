@@ -390,5 +390,123 @@ def reset(ctx):
         sys.exit(1)
 
 
+@main.command()
+@click.pass_context
+def doctor(ctx):
+    """Check CodeBased installation and configuration health."""
+    config_path = ctx.obj['config_path']
+    issues_found = False
+    
+    click.echo("🔍 CodeBased Doctor - Checking installation health...")
+    click.echo()
+    
+    # Check 1: Current working directory
+    cwd = os.getcwd()
+    if os.path.basename(cwd) == '.codebased':
+        click.echo("❌ Working Directory Issue:")
+        click.echo("   You're currently inside the .codebased directory.")
+        click.echo("   Fix: cd ..")
+        issues_found = True
+    else:
+        click.echo("✅ Working directory: Correct (project root)")
+    
+    # Check 2: Virtual environment location
+    venv_in_root = os.path.exists('venv')
+    venv_in_codebased = os.path.exists('.codebased/venv')
+    
+    if venv_in_root and not venv_in_codebased:
+        click.echo("⚠️  Virtual Environment Issue:")
+        click.echo("   Virtual environment found in project root instead of .codebased/")
+        click.echo("   Fix: rm -rf venv && python3 -m venv .codebased/venv")
+        issues_found = True
+    elif venv_in_codebased:
+        click.echo("✅ Virtual environment: Correct location (.codebased/venv)")
+    else:
+        click.echo("❌ Virtual Environment Issue:")
+        click.echo("   No virtual environment found")
+        click.echo("   Fix: python3 -m venv .codebased/venv")
+        issues_found = True
+    
+    # Check 3: Active virtual environment
+    if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+        venv_path = sys.prefix
+        if '.codebased/venv' in venv_path:
+            click.echo("✅ Active virtual environment: Correct")
+        else:
+            click.echo("⚠️  Active virtual environment: Wrong location")
+            click.echo(f"   Currently using: {venv_path}")
+            click.echo("   Fix: deactivate && source .codebased/venv/bin/activate")
+            issues_found = True
+    else:
+        click.echo("❌ Virtual Environment Issue:")
+        click.echo("   No virtual environment activated")
+        click.echo("   Fix: source .codebased/venv/bin/activate")
+        issues_found = True
+    
+    # Check 4: Configuration file location
+    config_in_root = os.path.exists('.codebased.yml')
+    config_in_codebased = os.path.exists('.codebased/.codebased.yml')
+    
+    if config_in_codebased and not config_in_root:
+        click.echo("❌ Configuration File Issue:")
+        click.echo("   .codebased.yml found inside .codebased/ directory")
+        click.echo("   Fix: mv .codebased/.codebased.yml .codebased.yml")
+        issues_found = True
+    elif config_in_root:
+        click.echo("✅ Configuration file: Correct location (project root)")
+    else:
+        click.echo("❌ Configuration File Issue:")
+        click.echo("   No .codebased.yml found")
+        click.echo("   Fix: codebased init")
+        issues_found = True
+    
+    # Check 5: CodeBased directory structure
+    required_dirs = ['.codebased', '.codebased/data', '.codebased/web', '.codebased/src']
+    for dir_path in required_dirs:
+        if not os.path.exists(dir_path):
+            click.echo(f"❌ Directory Structure Issue:")
+            click.echo(f"   Missing directory: {dir_path}")
+            click.echo(f"   Fix: mkdir -p {dir_path}")
+            issues_found = True
+    
+    if all(os.path.exists(d) for d in required_dirs):
+        click.echo("✅ Directory structure: Complete")
+    
+    # Check 6: Database initialization
+    db_path = '.codebased/data/graph.kuzu'
+    if os.path.exists(db_path):
+        click.echo("✅ Database: Initialized")
+    else:
+        click.echo("❌ Database Issue:")
+        click.echo("   Database not initialized")
+        click.echo("   Fix: codebased init")
+        issues_found = True
+    
+    # Check 7: Duplicate .codebased directories
+    nested_codebased = os.path.exists('.codebased/.codebased')
+    if nested_codebased:
+        click.echo("❌ Directory Structure Issue:")
+        click.echo("   Nested .codebased directory found")
+        click.echo("   Fix: rm -rf .codebased/.codebased")
+        issues_found = True
+    
+    # Check 8: CodeBased installation
+    try:
+        import codebased
+        click.echo("✅ CodeBased module: Installed")
+    except ImportError:
+        click.echo("❌ Installation Issue:")
+        click.echo("   CodeBased module not found")
+        click.echo("   Fix: pip install -e .codebased/")
+        issues_found = True
+    
+    click.echo()
+    if issues_found:
+        click.echo("🔧 Issues found! Please run the suggested fixes above.")
+        sys.exit(1)
+    else:
+        click.echo("✨ All checks passed! CodeBased is properly installed.")
+
+
 if __name__ == '__main__':
     main()

@@ -11,9 +11,10 @@ env/
 ENV/
 
 # Database
-data/graph.kuzu/
+*/data/graph.kuzu/
 *.db
 *.sqlite
+
 
 # IDE
 .vscode/

@@ -15,8 +15,10 @@ FILE_TYPE_PATTERNS: Dict[str, str] = {
     ".service.ts": "angular",
     ".guard.ts": "angular",
     ".pipe.ts": "angular",
-    ".component.html": "angular",
-    ".component.css": "angular",
+    ".component.html": "angular_template",
+    ".component.css": "angular_style",
+    ".component.scss": "angular_style",
+    ".component.sass": "angular_style",
 }
 
 # Basic extension mapping

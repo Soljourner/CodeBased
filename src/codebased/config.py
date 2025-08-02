@@ -22,7 +22,31 @@ class ParsingConfig:
         'node_modules',
         '.env',
         'venv',
-        'env'
+        'env',
+        'dist',
+        'build',
+        '.next',
+        'coverage',
+        'out',
+        '.turbo',
+        # Enhanced build artifact exclusions
+        '*/dist/*',
+        '*/build/*',
+        '*/.angular/*',
+        '*/.next/*',
+        '*/coverage/*',
+        '*/out/*',
+        '*/.turbo/*',
+        # Additional common build artifacts
+        '*/lib/*',
+        '*/esm/*',
+        '*/umd/*',
+        '*/.cache/*',
+        '*/target/*',
+        '*/.gradle/*',
+        '*/.mvn/*',
+        '*/bin/*',
+        '*/obj/*'
     ])
     include_docstrings: bool = True
     max_file_size: int = 1024 * 1024  # 1MB
@@ -112,6 +136,13 @@ class CodeBasedConfig:
         if config_file:
             return cls.from_file(str(config_file))
         else:
+            # Provide helpful message about missing config
+            cwd = Path.cwd()
+            if cwd.name == '.codebased':
+                print("WARNING: You're inside the .codebased directory.")
+                print("CodeBased should be run from your project root.")
+                print("Try: cd ..")
+            
             # Return default config with current directory as project root
             config = cls()
             config.project_root = str(Path(start_path).resolve())
@@ -131,7 +162,28 @@ class CodeBasedConfig:
         config_path = Path(config_path)
         
         if not config_path.exists():
-            return cls()
+            # Provide helpful error message about config location
+            cwd = Path.cwd()
+            if cwd.name == '.codebased':
+                raise FileNotFoundError(
+                    f"Configuration file '{config_path}' not found.\n"
+                    f"You appear to be running from inside the .codebased directory.\n"
+                    f"CodeBased should be run from your project root directory.\n"
+                    f"Try: cd .. && codebased <command>"
+                )
+            else:
+                # Check common misplacement
+                if Path('.codebased/.codebased.yml').exists():
+                    raise FileNotFoundError(
+                        f"Configuration file '{config_path}' not found in project root.\n"
+                        f"Found .codebased.yml inside .codebased/ directory.\n"
+                        f"Fix: mv .codebased/.codebased.yml .codebased.yml"
+                    )
+                else:
+                    raise FileNotFoundError(
+                        f"Configuration file '{config_path}' not found.\n"
+                        f"Run 'codebased init' to create it."
+                    )
         
         try:
             # Get the directory containing the config file to resolve relative paths
@@ -194,25 +246,33 @@ class CodeBasedConfig:
                     enable_docs=api_data.get('enable_docs', config.api.enable_docs)
                 )
             
-            if 'web' in data:
-                web_data = data['web']
+            # Handle web configuration
+            web_data = data.get('web', {})
+            
+            # Get web paths with defaults
+            static_path = web_data.get('static_path', config.web.static_path)
+            template_path = web_data.get('template_path', config.web.template_path)
+            
+            # Special handling when running from inside .codebased directory
+            if config_dir.name == '.codebased':
+                # Strip .codebased/ prefix if present to avoid duplication
+                if static_path and static_path.startswith('.codebased/'):
+                    static_path = static_path[11:]  # Remove '.codebased/' prefix
+                if template_path and template_path.startswith('.codebased/'):
+                    template_path = template_path[11:]  # Remove '.codebased/' prefix
                 
-                # Resolve web paths relative to project root
-                static_path = web_data.get('static_path', config.web.static_path)
-                template_path = web_data.get('template_path', config.web.template_path)
-                
-                if static_path and not Path(static_path).is_absolute():
-                    static_path = str((Path(config.project_root) / static_path).resolve())
-                if template_path and not Path(template_path).is_absolute():
-                    template_path = str((Path(config.project_root) / template_path).resolve())
-                
-                config.web = WebConfig(
-                    static_path=static_path,
-                    template_path=template_path,
-                    max_nodes=web_data.get('max_nodes', config.web.max_nodes),
-                    max_edges=web_data.get('max_edges', config.web.max_edges),
-                    default_layout=web_data.get('default_layout', config.web.default_layout)
-                )
+            if static_path and not Path(static_path).is_absolute():
+                static_path = str((Path(config.project_root) / static_path).resolve())
+            if template_path and not Path(template_path).is_absolute():
+                template_path = str((Path(config.project_root) / template_path).resolve())
+            
+            config.web = WebConfig(
+                static_path=static_path,
+                template_path=template_path,
+                max_nodes=web_data.get('max_nodes', config.web.max_nodes),
+                max_edges=web_data.get('max_edges', config.web.max_edges),
+                default_layout=web_data.get('default_layout', config.web.default_layout)
+            )
             
             return config
             

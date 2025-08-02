@@ -66,15 +66,18 @@ check_pip() {
 setup_virtual_environment() {
     print_status "Setting up virtual environment..."
     
-    if [ ! -d "venv" ]; then
-        python3 -m venv venv
-        print_success "Virtual environment created"
+    # Create venv inside .codebased directory
+    VENV_PATH="$CODEBASED_DIR/venv"
+    
+    if [ ! -d "$VENV_PATH" ]; then
+        python3 -m venv "$VENV_PATH"
+        print_success "Virtual environment created at $VENV_PATH"
     else
-        print_warning "Virtual environment already exists"
+        print_warning "Virtual environment already exists at $VENV_PATH"
     fi
     
     # Activate virtual environment
-    source venv/bin/activate
+    source "$VENV_PATH/bin/activate"
     
     # Upgrade pip
     pip install --upgrade pip
@@ -160,9 +163,15 @@ print_next_steps() {
     echo
     print_success "CodeBased setup completed!"
     echo
+    echo "IMPORTANT: Everything is self-contained in the $CODEBASED_DIR directory:"
+    echo "  - Virtual environment: $CODEBASED_DIR/venv"
+    echo "  - Source code: $CODEBASED_DIR/src"
+    echo "  - Database: $CODEBASED_DIR/data"
+    echo "  - Web interface: $CODEBASED_DIR/web"
+    echo
     echo "Next steps:"
     echo "  1. Activate the virtual environment:"
-    echo "     source venv/bin/activate"
+    echo "     source $CODEBASED_DIR/venv/bin/activate"
     echo
     echo "  2. Analyze your code:"
     echo "     codebased update"
@@ -172,6 +181,9 @@ print_next_steps() {
     echo
     echo "  4. Open http://localhost:8000 in your browser"
     echo
+    echo "NOTE: Always run CodeBased commands from your project root directory (this directory),"
+    echo "      not from inside the $CODEBASED_DIR directory."
+    echo
     echo "For help, run: codebased --help"
 }
 
@@ -179,6 +191,15 @@ main() {
     echo "CodeBased Setup Script"
     echo "======================"
     echo
+    
+    # Check if we're running from inside .codebased directory
+    if [ "$(basename "$PWD")" = ".codebased" ]; then
+        print_error "You're running this script from inside the .codebased directory."
+        print_error "Please run it from your project root directory instead:"
+        print_error "  cd .."
+        print_error "  ./.codebased/setup.sh"
+        exit 1
+    fi
     
     # Check if we're in the right directory
     if [ ! -d "$CODEBASED_DIR" ]; then

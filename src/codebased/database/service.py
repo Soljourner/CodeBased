@@ -163,10 +163,21 @@ class DatabaseService:
         
         try:
             # Execute queries sequentially (Kuzu handles transactions internally)
-            for query in queries:
-                result = self.conn.execute(query)
+            failed_count = 0
+            for i, query in enumerate(queries):
+                try:
+                    result = self.conn.execute(query)
+                except Exception as e:
+                    failed_count += 1
+                    if failed_count <= 3:  # Log first 3 failures
+                        logger.error(f"Query {i+1} failed: {e}")
+                        logger.debug(f"Failed query: {query[:200]}...")
             
-            logger.debug(f"Executed batch of {len(queries)} queries")
+            if failed_count > 0:
+                logger.error(f"{failed_count} out of {len(queries)} queries failed")
+                return False
+            
+            logger.debug(f"Executed batch of {len(queries)} queries successfully")
             return True
             
         except Exception as e:

@@ -20,15 +20,28 @@ def ensure_language(lang: str) -> Language:
     the same directory as this file.
     """
     try:
-        ts_langs = importlib.import_module("tree_sitter_languages")
-        return ts_langs.get_language(lang)
+        import warnings
+        with warnings.catch_warnings():
+            # Suppress the FutureWarning from tree_sitter_languages
+            warnings.filterwarnings("ignore", category=FutureWarning, module="tree_sitter_languages")
+            ts_langs = importlib.import_module("tree_sitter_languages")
+            return ts_langs.get_language(lang)
     except Exception as e:  # pragma: no cover - fallback path
         logger.debug("tree_sitter_languages not usable: %s", e)
 
     so_path = __name__.replace(".", "/")
     so_path = f"{__file__[:-3]}_{lang}.so"
     try:
-        return Language(so_path)
+        # Handle both old and new Language constructor APIs
+        try:
+            # Try new API first
+            import ctypes
+            lib = ctypes.cdll.LoadLibrary(so_path)
+            lang_func = getattr(lib, f"tree_sitter_{lang}")
+            return Language(lang_func())
+        except:
+            # Fallback to old API
+            return Language(so_path)
     except Exception as e:
         logger.error("Tree-sitter language '%s' not installed: %s", lang, e)
         raise

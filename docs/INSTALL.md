@@ -2,6 +2,27 @@
 
 This guide covers different ways to install and set up CodeBased.
 
+## 🔑 Key Concepts - READ THIS FIRST!
+
+### Self-Contained Installation
+CodeBased keeps EVERYTHING inside the `.codebased` directory in your project:
+- ✅ Virtual environment: `.codebased/venv/` (NOT in project root!)
+- ✅ Source code: `.codebased/src/`
+- ✅ Database: `.codebased/data/`
+- ✅ Web files: `.codebased/web/`
+- ✅ Logs: `.codebased/logs/`
+
+### Working Directory Rules
+- 🟢 **ALWAYS** run commands from your project root directory
+- 🔴 **NEVER** cd into `.codebased/` to run commands
+- 🟢 **Config file** (`.codebased.yml`) goes in project root, NOT inside `.codebased/`
+
+### Common Mistakes to Avoid
+1. ❌ Creating `venv` in project root → ✅ Use `.codebased/venv`
+2. ❌ Running `codebased` from inside `.codebased/` → ✅ Run from project root
+3. ❌ Putting `.codebased.yml` inside `.codebased/` → ✅ Put in project root
+4. ❌ Multiple `.codebased` directories → ✅ Only one at project root
+
 ## Prerequisites
 
 - Python 3.8 or higher
@@ -37,8 +58,8 @@ pip install -r requirements.txt
 cd your-project-directory
 
 # Run the automated setup script
-chmod +x .codebased/setup.sh
-./.codebased/setup.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
 ### Windows
@@ -51,7 +72,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 cd your-project-directory
 
 # Run the setup script
-.\.codebased\setup.ps1
+.\setup.ps1
 ```
 
 The setup script will:
@@ -187,6 +208,52 @@ logging:
 
 ## Troubleshooting Installation
 
+### Directory and Path Issues
+
+**Error**: "codebased: command not found" after installation
+```bash
+# Check if virtual environment is activated
+which python  # Should show .codebased/venv/bin/python
+
+# If not, activate it:
+source .codebased/venv/bin/activate
+
+# Verify installation
+pip list | grep codebased
+```
+
+**Error**: Running from wrong directory
+```bash
+# If you see this error:
+# "Configuration file not found"
+
+# Check your current directory:
+pwd
+
+# You should be in project root, NOT in .codebased:
+# ✅ /home/user/myproject
+# ❌ /home/user/myproject/.codebased
+
+# Fix:
+cd /path/to/your/project/root
+```
+
+**Error**: Duplicate databases or config files
+```bash
+# This happens when commands are run from wrong directories
+# Check for duplicates:
+find . -name "graph.kuzu" -type d
+find . -name ".codebased.yml" -type f
+
+# Should only have:
+# ./.codebased/data/graph.kuzu
+# ./.codebased.yml
+
+# Remove duplicates:
+rm -rf .codebased/.codebased  # Remove nested directory
+rm .codebased/.codebased.yml   # Remove misplaced config
+```
+
 ### Python Version Issues
 
 **Error**: "Python 3.8+ required"
@@ -210,7 +277,7 @@ brew install python@3.8
 **Error**: "Permission denied"
 ```bash
 # Unix/Linux - Make scripts executable
-chmod +x .codebased/setup.sh
+chmod +x setup.sh
 
 # Windows - Run PowerShell as Administrator
 # Or change execution policy:

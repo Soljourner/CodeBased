@@ -17,7 +17,14 @@ CodeBased is a lightweight, self-contained code graph generator and visualizatio
 
 ### What programming languages does CodeBased support?
 
-Currently, CodeBased supports Python out of the box. The architecture is designed for easy extension to other languages. JavaScript/TypeScript, Go, and Java parsers are planned for future releases.
+Currently, CodeBased supports:
+- Python (.py)
+- JavaScript (.js)
+- TypeScript (.ts, .tsx)
+- JSX (.jsx)
+- Angular components with template/style analysis
+
+The architecture is designed for easy extension to other languages. Go, Java, and Rust parsers are planned for future releases.
 
 ## Installation & Setup
 

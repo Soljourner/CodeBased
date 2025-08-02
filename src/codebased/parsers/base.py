@@ -6,11 +6,21 @@ import ast
 import os
 import hashlib
 import logging
+import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Set, Generator, Tuple
+from typing import List, Dict, Any, Optional, Set, Generator, Tuple, Union
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from .file_types import get_file_type
+
+try:
+    import tree_sitter
+    from tree_sitter import Language, Parser, Node, Tree
+    TREE_SITTER_AVAILABLE = True
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
+    Node = None
+    Tree = None
 
 logger = logging.getLogger(__name__)
 
@@ -158,11 +168,25 @@ class BaseParser(ABC):
         """
         import fnmatch
         
-        path_name = Path(path).name
+        path_obj = Path(path)
+        path_name = path_obj.name
+        
+        # Convert to posix path for consistent pattern matching
+        normalized_path = path_obj.as_posix()
         
         for pattern in exclude_patterns:
-            if fnmatch.fnmatch(path_name, pattern) or fnmatch.fnmatch(path, pattern):
+            # Check filename pattern
+            if fnmatch.fnmatch(path_name, pattern):
                 return True
+            
+            # Check full path pattern (handles */dist/*, */build/*, etc.)
+            if fnmatch.fnmatch(normalized_path, pattern):
+                return True
+            
+            # Check if any parent directory matches the pattern (for simple directory names)
+            for part in path_obj.parts:
+                if fnmatch.fnmatch(part, pattern):
+                    return True
         
         return False
     
@@ -184,20 +208,261 @@ class BaseParser(ABC):
             logger.error(f"Failed to calculate hash for {file_path}: {e}")
             return ""
     
-    def _generate_entity_id(self, name: str, file_path: str, line_start: int) -> str:
+    def _generate_entity_id(self, name: str, file_path: str, line_start: int, 
+                           entity_type: str = "", line_end: int = None, parent_id: str = "") -> str:
         """
-        Generate unique entity ID.
+        Generate unique entity ID with enhanced collision resistance.
         
         Args:
             name: Entity name
             file_path: File path
             line_start: Starting line number
+            entity_type: Type of entity (Class, Function, etc.)
+            line_end: Ending line number (optional)
+            parent_id: Parent entity ID for nested entities (optional)
             
         Returns:
             Unique entity ID
         """
-        identifier = f"{file_path}:{name}:{line_start}"
-        return hashlib.md5(identifier.encode()).hexdigest()
+        # Normalize file path to handle different path separators
+        normalized_path = Path(file_path).as_posix()
+        
+        # Build identifier with sufficient context to prevent collisions
+        identifier_parts = [
+            normalized_path,
+            entity_type or "unknown",
+            name or "anonymous",
+            str(line_start)
+        ]
+        
+        # Add line_end if provided for better uniqueness
+        if line_end and line_end != line_start:
+            identifier_parts.append(str(line_end))
+        
+        # Add parent context for nested entities
+        if parent_id:
+            identifier_parts.append(f"parent:{parent_id}")
+        
+        identifier = ":".join(identifier_parts)
+        
+        # Use SHA-256 for better collision resistance than MD5
+        return hashlib.sha256(identifier.encode('utf-8')).hexdigest()
+    
+    def _normalize_relationship_metadata(self, relationship: 'ParsedRelationship') -> Dict[str, Any]:
+        """
+        Normalize relationship metadata to match database schema expectations.
+        
+        This method should be overridden by parsers to map their metadata
+        to the properties expected by the database schema.
+        
+        Args:
+            relationship: Relationship with metadata to normalize
+            
+        Returns:
+            Dictionary with properties that match the schema
+        """
+        # Default implementation - return empty dict to remove all metadata
+        # Subclasses should override this to provide proper mapping
+        return {}
+
+
+class TreeSitterParser(BaseParser):
+    """Base class for tree-sitter based parsers."""
+    
+    TREE_SITTER_LANGUAGE: str = ""  # Override in subclasses
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        """Initialize tree-sitter parser."""
+        super().__init__(config)
+        self._language: Optional[Language] = None
+        self._parser: Optional[Parser] = None
+        
+        if not TREE_SITTER_AVAILABLE:
+            raise ImportError("tree-sitter not available. Install with: pip install tree-sitter tree_sitter_languages")
+        
+        self._initialize_parser()
+    
+    def _initialize_parser(self) -> None:
+        """Initialize tree-sitter parser and language."""
+        if not self.TREE_SITTER_LANGUAGE:
+            raise ValueError(f"{self.__class__.__name__} must define TREE_SITTER_LANGUAGE")
+        
+        try:
+            from .treesitter_setup import ensure_language
+            self._language = ensure_language(self.TREE_SITTER_LANGUAGE)
+            self._parser = Parser()
+            self._parser.set_language(self._language)
+            logger.debug(f"Initialized {self.TREE_SITTER_LANGUAGE} parser")
+        except Exception as e:
+            logger.error(f"Failed to initialize tree-sitter parser for {self.TREE_SITTER_LANGUAGE}: {e}")
+            raise
+    
+    def _parse_source_code(self, source_code: str) -> Optional[Tree]:
+        """
+        Parse source code with tree-sitter.
+        
+        Args:
+            source_code: Source code to parse
+            
+        Returns:
+            Parsed tree or None if parsing failed
+        """
+        if not self._parser:
+            return None
+            
+        try:
+            tree = self._parser.parse(source_code.encode('utf-8'))
+            return tree
+        except Exception as e:
+            logger.error(f"Tree-sitter parsing failed: {e}")
+            return None
+    
+    def _get_node_text(self, node: Node, source_code: str) -> str:
+        """
+        Extract text content from a tree-sitter node.
+        
+        Args:
+            node: Tree-sitter node
+            source_code: Original source code
+            
+        Returns:
+            Text content of the node
+        """
+        if node is None:
+            return ""
+        
+        try:
+            start_byte = node.start_byte
+            end_byte = node.end_byte
+            return source_code.encode('utf-8')[start_byte:end_byte].decode('utf-8')
+        except Exception as e:
+            logger.debug(f"Failed to extract node text: {e}")
+            return ""
+    
+    def _get_node_line_info(self, node: Node) -> Tuple[int, int]:
+        """
+        Get line start and end information for a node.
+        
+        Args:
+            node: Tree-sitter node
+            
+        Returns:
+            Tuple of (start_line, end_line) (1-indexed)
+        """
+        if node is None:
+            return (1, 1)
+        
+        try:
+            # Tree-sitter uses 0-indexed lines, convert to 1-indexed
+            # Handle both object and tuple return types for compatibility
+            start_point = node.start_point
+            end_point = node.end_point
+            
+            if hasattr(start_point, 'row'):
+                # Object with row/column attributes
+                start_line = start_point.row + 1
+                end_line = end_point.row + 1
+            else:
+                # Tuple format (row, column)
+                start_line = start_point[0] + 1
+                end_line = end_point[0] + 1
+                
+            return (start_line, end_line)
+        except Exception as e:
+            logger.debug(f"Failed to get line info for node: {e}")
+            return (1, 1)
+    
+    def _traverse_tree(self, node: Node, source_code: str, entities: List[ParsedEntity], 
+                      relationships: List[ParsedRelationship], file_path: str) -> None:
+        """
+        Traverse tree-sitter AST and extract entities/relationships.
+        
+        Args:
+            node: Current tree-sitter node
+            source_code: Original source code
+            entities: List to append entities to
+            relationships: List to append relationships to
+            file_path: Path to source file
+        """
+        # This is meant to be overridden by specific language parsers
+        # Default implementation just traverses children
+        for child in node.children:
+            self._traverse_tree(child, source_code, entities, relationships, file_path)
+    
+    @abstractmethod
+    def _extract_entities_from_node(self, node: Node, source_code: str, file_path: str) -> List[ParsedEntity]:
+        """
+        Extract entities from a specific tree-sitter node.
+        Must be implemented by subclasses.
+        
+        Args:
+            node: Tree-sitter node to process
+            source_code: Original source code
+            file_path: Path to source file
+            
+        Returns:
+            List of extracted entities
+        """
+        pass
+    
+    @abstractmethod
+    def _extract_relationships_from_node(self, node: Node, source_code: str, 
+                                       entities: List[ParsedEntity], file_path: str) -> List[ParsedRelationship]:
+        """
+        Extract relationships from a specific tree-sitter node.
+        Must be implemented by subclasses.
+        
+        Args:
+            node: Tree-sitter node to process
+            source_code: Original source code
+            entities: Previously extracted entities
+            file_path: Path to source file
+            
+        Returns:
+            List of extracted relationships
+        """
+        pass
+    
+    def parse_file(self, file_path: str) -> ParseResult:
+        """
+        Parse a file using tree-sitter.
+        
+        Args:
+            file_path: Path to file to parse
+            
+        Returns:
+            ParseResult with entities and relationships
+        """
+        start_time = time.time()
+        entities = []
+        relationships = []
+        errors = []
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                source_code = f.read()
+            
+            file_hash = self._calculate_file_hash(file_path)
+            
+            # Parse with tree-sitter
+            tree = self._parse_source_code(source_code)
+            if tree is None:
+                errors.append("Failed to parse with tree-sitter")
+                return ParseResult(entities, relationships, file_hash, file_path, errors, time.time() - start_time)
+            
+            # Extract entities and relationships from AST
+            root_node = tree.root_node
+            entities = self._extract_entities_from_node(root_node, source_code, file_path)
+            relationships = self._extract_relationships_from_node(root_node, source_code, entities, file_path)
+            
+        except Exception as e:
+            error_msg = f"Failed to parse {file_path}: {e}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+            file_hash = self._calculate_file_hash(file_path) if os.path.exists(file_path) else ""
+        
+        parse_time = time.time() - start_time
+        return ParseResult(entities, relationships, file_hash, file_path, errors, parse_time)
 
 
 class FileTraversal:

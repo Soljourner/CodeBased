@@ -1,6 +1,10 @@
-# CodeBased Example Queries
+# CodeBased Query Library
 
-This document contains a comprehensive library of Cypher queries for analyzing codebases with CodeBased. These queries are particularly useful for AI agents and developers who need to understand code relationships and dependencies.
+**For Kuzu syntax basics and troubleshooting, see [QUERIES.md](../docs/QUERIES.md)**
+
+This document contains a comprehensive library of advanced Cypher queries for analyzing codebases with CodeBased. These queries are particularly useful for AI agents and developers who need to understand complex code relationships and perform detailed analysis.
+
+⚠️ **Important**: CodeBased uses Kuzu's Cypher dialect. All entities use `file_path` property (NOT `file_id` or `module_path`).
 
 ## Table of Contents
 
@@ -15,36 +19,7 @@ This document contains a comprehensive library of Cypher queries for analyzing c
 
 ## Basic Queries
 
-### Find All Files
-
-```cypher
-MATCH (f:File)
-RETURN f.name, f.path, f.lines_of_code
-ORDER BY f.lines_of_code DESC
-```
-
-**Use Case**: Get an overview of all files in the codebase, sorted by size.
-
-### Count Entities by Type
-
-```cypher
-MATCH (n)
-RETURN labels(n)[0] AS entity_type, COUNT(n) AS count
-ORDER BY count DESC
-```
-
-**Use Case**: Understand the composition of your codebase.
-
-### Files with Most Entities
-
-```cypher
-MATCH (f:File)-[:CONTAINS]->(entity)
-RETURN f.name, f.path, COUNT(entity) AS entity_count
-ORDER BY entity_count DESC
-LIMIT 10
-```
-
-**Use Case**: Find the most complex files that might need refactoring.
+> 💡 **Note**: For basic query examples and Kuzu-specific syntax, see [QUERIES.md](../docs/QUERIES.md#common-query-patterns)
 
 ## Function Analysis
 

@@ -390,9 +390,22 @@ class IncrementalUpdater:
         try:
             stats = self.db_service.get_stats()
             
+            # Query for File entities directly
+            file_count = 0
+            try:
+                result = self.db_service.execute_query("MATCH (f:File) RETURN count(f) as count")
+                if result and len(result) > 0:
+                    if isinstance(result[0], dict):
+                        file_count = result[0].get('count', 0)
+                    else:
+                        file_count = result[0][0] if len(result[0]) > 0 else 0
+            except Exception as e:
+                logger.warning(f"Could not query File count: {e}")
+                file_count = len(self.file_hashes)
+            
             status = {
                 'last_update': None,  # TODO: Store timestamp in database
-                'tracked_files': len(self.file_hashes),
+                'tracked_files': file_count,
                 'database_stats': stats,
                 'health': self.db_service.health_check()
             }
@@ -403,7 +416,7 @@ class IncrementalUpdater:
             logger.error(f"Failed to get update status: {e}")
             return {
                 'error': str(e),
-                'tracked_files': len(self.file_hashes)
+                'tracked_files': 0
             }
     
     def cleanup_orphaned_entities(self) -> Dict[str, int]:
